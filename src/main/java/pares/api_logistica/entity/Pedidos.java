@@ -1,4 +1,4 @@
-/**package pares.api_logistica.entity;
+package pares.api_logistica.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,7 +13,7 @@ import lombok.Setter;
  *
  * @author Lucas e Marcus
  * @since 1.0
-
+*/
 
 @Setter
 @Getter
@@ -21,11 +21,10 @@ import lombok.Setter;
 @NoArgsConstructor
 public class Pedidos {
 
-    private Integer id;
-    private Integer clienteId;
+    private Long id;
+    private Long clienteId;
     private Double volumeM3;
     private Double pesog;
     private StatusPedido statusPedido;
 
 }
- */

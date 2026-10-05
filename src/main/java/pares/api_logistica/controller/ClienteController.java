@@ -4,11 +4,17 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pares.api_logistica.dto.ClienteCreateRequest;
+import pares.api_logistica.dto.ClientePatch;
+import pares.api_logistica.dto.ClienteResponse;
+import pares.api_logistica.dto.ClienteUpdate;
 import pares.api_logistica.entity.Cliente;
 import pares.api_logistica.repository.ClienteRepository;
+import pares.api_logistica.service.ClienteService;
 
 
 import java.util.ArrayList;
@@ -33,10 +39,10 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
 @RequestMapping("api/v1/cliente")
+@RequiredArgsConstructor
 public class ClienteController {
 
-    private final ClienteRepository clientes = new ClienteRepository();
-    private final AtomicLong sequencialId = new AtomicLong(1);
+    private final ClienteService service;
 
     /**
      * Lista Cliente cadastrados
@@ -58,8 +64,8 @@ public class ClienteController {
             description = "Cliente não encontrado"
     )
     @GetMapping("/listar")
-    public ResponseEntity<Map<Integer, Cliente>> listar(){
-        return ResponseEntity.ok(clientes.getClientes());
+    public ResponseEntity<List<ClienteResponse>> listar(){
+        return ResponseEntity.ok(service.listar());
     }
 
 
@@ -86,13 +92,8 @@ public class ClienteController {
     )
 
     @GetMapping("/{id}")
-    public ResponseEntity<Cliente>buscarPorId(@PathVariable Integer id){
-        for( Cliente cliente : clientes.getClientes().values()){
-            if(cliente.getId().equals(id)){
-                return ResponseEntity.ok(cliente);
-            }
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<ClienteResponse>buscarPorId(@PathVariable Long id){
+        return ResponseEntity.ok(service.buscarPorId(id));
     }
 
     /**
@@ -119,18 +120,8 @@ public class ClienteController {
     )
 
     @GetMapping
-    public ResponseEntity<List<Cliente>> buscarPorCpfCnpj(@RequestParam(required = false) String cpfCnpj){
-
-        List <Cliente> listaCpfCnpj = new ArrayList<>();
-
-        for( Cliente cliente : clientes.getClientes().values()){
-            if(cliente.getCpfCnpj().equals(cpfCnpj)){
-                listaCpfCnpj.add(cliente);
-            }
-        }
-
-
-        return ResponseEntity.ok().body(listaCpfCnpj);
+    public ResponseEntity<List<ClienteResponse>> buscarPorCpfCnpj(@RequestParam(required = false) String cpfCnpj){
+        return ResponseEntity.ok(service.buscarPorCpfCnpj(cpfCnpj));
     }
 
     /**
@@ -157,9 +148,8 @@ public class ClienteController {
     })
 
     @PostMapping
-    public ResponseEntity<Cliente> cadastrar(@RequestBody Cliente cliente){
-        cliente.setId(sequencialId.getAndIncrement());
-        clientes.postCliente(cliente);
+    public ResponseEntity<ClienteResponse> cadastrar(@RequestBody ClienteCreateRequest request){
+        ClienteResponse cliente = service.cadastrar(request);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(cliente);
@@ -188,11 +178,11 @@ public class ClienteController {
             )
     })
     @PutMapping("/{id}")
-    public ResponseEntity<Cliente> atualizar(
-            @PathVariable Long id,@RequestBody Cliente clienteAtualizado
+    public ResponseEntity<ClienteResponse> atualizar(
+            @PathVariable Long id,@RequestBody ClienteUpdate update
     ){
 
-        return ResponseEntity.ok().body(clientes.updateCliente(id, clienteAtualizado));
+        return ResponseEntity.ok().body(service.atualizarCompleto(id, update));
     }
 
     /**
@@ -218,30 +208,10 @@ public class ClienteController {
             )
     })
     @PatchMapping("/{id}")
-    public ResponseEntity<Cliente> atualizarParcialmente(
-            @PathVariable Long id, @RequestBody Cliente clienteAtualizadoParcialmente
+    public ResponseEntity<ClienteResponse> atualizarParcialmente(
+            @PathVariable Long id, @RequestBody ClientePatch patch
             ){
-        for(Cliente cliente : clientes.getClientes().values()){
-            if(cliente.getId().equals(id)){
-                if(clienteAtualizadoParcialmente.getNome() != null){
-                    cliente.setNome(clienteAtualizadoParcialmente.getNome());
-                }
-                if (clienteAtualizadoParcialmente.getCpfCnpj() != null){
-                    cliente.setCpfCnpj(clienteAtualizadoParcialmente.getCpfCnpj());
-                }
-                if (clienteAtualizadoParcialmente.getEndereco() != null){
-                    cliente.setEndereco(clienteAtualizadoParcialmente.getEndereco());
-                }
-                if (clienteAtualizadoParcialmente.getCidade() != null){
-                    cliente.setCidade(clienteAtualizadoParcialmente.getCidade());
-                }
-                if(clienteAtualizadoParcialmente.getEstado() != null){
-                    cliente.setEstado(clienteAtualizadoParcialmente.getEstado());
-                }
-                return  ResponseEntity.ok(cliente);
-            }
-        }
-        return ResponseEntity.notFound().build();
+       return  ResponseEntity.ok().body(service.atualizarParcialmente(id, patch));
     }
 
     /**
@@ -268,9 +238,9 @@ public class ClienteController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deletar(@PathVariable Long id){
-        boolean removido =clientes.deleteCliente(id);
+        boolean removido = service.deletar(id);
 
-        return ResponseEntity.ok("removido " + id);
+        return ResponseEntity.ok("removido " + removido);
     }
 
 }

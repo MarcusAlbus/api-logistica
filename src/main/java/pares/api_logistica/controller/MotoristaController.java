@@ -4,18 +4,16 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pares.api_logistica.entity.Cliente;
+import pares.api_logistica.dto.*;
 import pares.api_logistica.entity.Motorista;
-import pares.api_logistica.repository.ClienteRepository;
-import pares.api_logistica.repository.MotoristaRepository;
+import pares.api_logistica.service.MotoristaService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Tag(
         name = "Motorista",
@@ -34,11 +32,11 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
 @RequestMapping("api/v1/motorista")
-
+@RequiredArgsConstructor
 public class MotoristaController {
 
-    private final MotoristaRepository motoristas = new MotoristaRepository();
-    private final AtomicLong sequencialId = new AtomicLong(1);
+    private final MotoristaService motoristas;
+
 
     /**
      * Lista motorista cadastrados
@@ -60,8 +58,8 @@ public class MotoristaController {
             description = "Motorista não encontrado"
     )
     @GetMapping("")
-    public ResponseEntity<Map<Integer, Motorista>> listar(){
-        return ResponseEntity.ok(motoristas.getMotoristas());
+    public ResponseEntity<List<MotoristaResponse>> listar(){
+        return ResponseEntity.ok(motoristas.listar());
     }
 
 
@@ -88,13 +86,8 @@ public class MotoristaController {
     )
 
     @GetMapping("/{id}")
-    public ResponseEntity<Motorista>buscarPorId(@PathVariable Long id){
-        for( Motorista motorista : motoristas.getMotoristas().values()){
-            if(motorista.getId().equals(id)){
-                return ResponseEntity.ok(motorista);
-            }
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<MotoristaResponse>buscarPorId(@PathVariable Long id){
+        return ResponseEntity.ok(motoristas.buscarPorId(id));
     }
 
 
@@ -122,9 +115,8 @@ public class MotoristaController {
     })
 
     @PostMapping
-    public ResponseEntity<Motorista> cadastrar(@RequestBody Motorista motorista){
-        motorista.setId(sequencialId.getAndIncrement());
-        motoristas.postMotorista(motorista);
+    public ResponseEntity<MotoristaResponse> cadastrar(@RequestBody MotoristaCreateRequest request){
+       MotoristaResponse motorista = motoristas.cadastrar(request);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(motorista);
@@ -153,11 +145,11 @@ public class MotoristaController {
             )
     })
     @PutMapping("/{id}")
-    public ResponseEntity<Motorista> atualizar(
-            @PathVariable Long id,@RequestBody Motorista motoristaAtualizado
+    public ResponseEntity<MotoristaResponse> atualizar(
+            @PathVariable Long id,@RequestBody MotoristaUpdate update
     ){
 
-        return ResponseEntity.ok().body(motoristas.UpdateMotorista(id, motoristaAtualizado));
+        return ResponseEntity.ok().body(motoristas.atualizarCompleto(id, update));
     }
 
     /**
@@ -183,27 +175,10 @@ public class MotoristaController {
             )
     })
     @PatchMapping("/{id}")
-    public ResponseEntity<Motorista> atualizarParcialmente(
-            @PathVariable Long id, @RequestBody Motorista motoristaAtualizadoParcialmente
+    public ResponseEntity<MotoristaResponse> atualizarParcialmente(
+            @PathVariable Long id, @RequestBody MotoristaPatch patch
     ) {
-        for (Motorista motorista : motoristas.getMotoristas().values()) {
-            if (motorista.getId().equals(id)) {
-                if (motoristaAtualizadoParcialmente.getNome() != null) {
-                    motorista.setNome(motoristaAtualizadoParcialmente.getNome());
-                }
-                if (motoristaAtualizadoParcialmente.getCnh() != null) {
-                    motorista.setCnh(motoristaAtualizadoParcialmente.getCnh());
-                }
-                if (motoristaAtualizadoParcialmente.getVeiculo() != null) {
-                    motorista.setVeiculo(motoristaAtualizadoParcialmente.getVeiculo());
-                }
-                if (motoristaAtualizadoParcialmente.getCidadeBase() != null) {
-                    motorista.setCidadeBase(motoristaAtualizadoParcialmente.getCidadeBase());
-                }
-                return ResponseEntity.ok(motorista);
-            }
-        }
-        return ResponseEntity.notFound().build();
+      return ResponseEntity.ok().body(motoristas.atualizarParcialmente(id, patch));
     }
 
     /**
@@ -230,9 +205,9 @@ public class MotoristaController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deletar(@PathVariable Long id){
-        boolean removido = motoristas.deleteMotorista(id);
+        boolean removido = motoristas.deletar(id);
 
-        return ResponseEntity.ok("removido " + id);
+         return ResponseEntity.ok("removido " + removido);
     }
 
 }

@@ -1,4 +1,4 @@
-/**package pares.api_logistica.entity;
+package pares.api_logistica.entity;
 
 public enum StatusEntrega {
     ENTREGUE,
@@ -6,4 +6,3 @@ public enum StatusEntrega {
     EM_ROTA
 
 }
-*/

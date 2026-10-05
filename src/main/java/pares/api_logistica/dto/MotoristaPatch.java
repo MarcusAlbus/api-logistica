@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public record MotoristaPath(
+public record MotoristaPatch(
         @NotBlank(message = "o nome nao pode ser vazio")
         @Size(min = 3, max = 100 ,message = "nome deve ter entre 3 e 100 caracterres")
         @Schema(

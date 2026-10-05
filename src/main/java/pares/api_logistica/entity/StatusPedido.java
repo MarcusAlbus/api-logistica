@@ -1,4 +1,4 @@
-/**package pares.api_logistica.entity;
+package pares.api_logistica.entity;
 
 public enum StatusPedido {
 
@@ -7,4 +7,3 @@ public enum StatusPedido {
     ACEITO
 
 }
-*/
